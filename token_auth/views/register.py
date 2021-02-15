@@ -6,7 +6,7 @@ from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -17,9 +17,8 @@ from token_auth.views.token import account_activation_token
 
 User = get_user_model()
 
+@permission_classes([AllowAny])
 class RegisterView(APIView):
-
-    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         """
@@ -47,13 +46,12 @@ class RegisterView(APIView):
         """
         Function for account activation
         """
-
         try:
             uid = force_text(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid)
         except(TypeError, ValueError, OverflowError, User.DoesNotExist):
             user = None
-        
+    
         if user is not None and account_activation_token.check_token(user, token):
             user.is_active = True
             user.save()
